@@ -2,17 +2,28 @@ from requests import request
 from socket import *
 import json
 from threading import Thread
+import sys
+import os
+import fcord
 
 token = None
 user_agent = None
-sock = None
 
-messages = []
+listeners = []
+events = []
 
 def main():
-    global sock, token, user_agent, running
+    global sock, token, user_agent, events, listeners
+    
+    sys.path.append(os.path.abspath("C:/Users/Fabillo/Desktop/fcord/mods/"))
+    import simple_command
+    listeners.append(simple_command.event)
+    
+    fcord.call = call
+    
     auth = open("auth.txt", "r")
-    auth_data = json.loads(auth.read())
+    auth_data = auth.read()
+    auth_data = json.loads(auth_data)
     token = auth_data["token"]
     user_agent = auth_data["user_agent"]
     auth.close()
@@ -24,23 +35,32 @@ def main():
     t.start()
     
     while True:
-        if len(messages) > 0:
-            for m in messages:
-                print(json.dumps(m, indent=4))
-            messages.clear()
+        done = []
+        for n, e in enumerate(events):
+            print("Event: " + json.dumps(e))
+            for l in listeners:
+                l(e)
+            done.append(n)
+        for n in done:
+            events = events[:n] + events[n+1:]
     
     print("Goodbye!")
 
 def recv():
-    global sock
+    global sock, messages, events
     
     while True:
-        msg = json.loads(sock.recv(8192).decode("utf-8"))
-        messages.append(msg)
+        data = sock.recv(8192).decode("utf-8")
+        event = json.loads(data)
+        print("Message")
+        events.append(event)
 
-def call(method, endpoint, data=None):
+def call(method, endpoint, data=None, headers={}):
     global token, user_agent
+    
     h = {"User-Agent": user_agent, "Authorization": "Bot " + token}
+    for x in headers:
+        h[x] = headers[x]
     return request(method, "https://discord.com/api/v8" + endpoint, data=data, headers=h)
 
 if __name__ == "__main__":
