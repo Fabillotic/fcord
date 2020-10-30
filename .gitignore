@@ -1,0 +1,5 @@
+/.*
+/auth.txt
+/config.txt
+/node_modules
+!/.gitignore
