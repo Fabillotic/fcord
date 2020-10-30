@@ -54,7 +54,7 @@ function start() {
 			writeConfig();
 			connect();
 		})
-		.catch((err) => {console.log("Couldn’t get gateway endpoint! " + err);});
+		.catch((err) => {console.log("Couldn't get gateway endpoint! " + err);});
 	}
 	else {
 		connect();
@@ -120,7 +120,7 @@ function connect() {
 						reconnect(true);
 						break;
 					case 10:
-						console.log("hellowo! interval: " + packet.d.heartbeat_interval);
+						console.log("hello! interval: " + packet.d.heartbeat_interval);
 						interval = setInterval(heart, packet.d.heartbeat_interval);
 						break;
 					case 11:
