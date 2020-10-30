@@ -19,16 +19,16 @@ let connection = null;
 let receivedAck = true;
 
 function start() {
-    try {
-        let data = JSON.parse(fs.readFileSync(authfile));
-        token = data.token;
-        user_agent = data.user_agent;
-        console.log("Successfully parsed auth file!");
-    }
-    catch(err) {
-        console.log("Authentication file couldn't be parsed: " + err);
-        process.exit(1);
-    }
+	try {
+		let data = JSON.parse(fs.readFileSync(authfile));
+		token = data.token;
+		user_agent = data.user_agent;
+		console.log("Successfully parsed auth file!");
+	}
+	catch(err) {
+		console.log("Authentication file couldn't be parsed: " + err);
+		process.exit(1);
+	}
 	try {
 		let data = fs.readFileSync(confile);
 		console.log("Found config: " + data);
@@ -68,14 +68,14 @@ function connect() {
 	receivedAck = true;
 	
 	let websocket = new WebSocketClient();
-    clients = [];
-    if(server != null) {
-        server.close();
-        server = null;
-    }
-    server = net.createServer(tcpserver);
+	clients = [];
+	if(server != null) {
+		server.close();
+		server = null;
+	}
+	server = net.createServer(tcpserver);
 	server.listen(2020, () => {console.log("TCP server listening...");});
-    
+	
 	websocket.on("connectFailed", function(error) {console.log("Connection error: " + error.toString()); server.close();});
 	websocket.on("connect", function(c) {
 		console.log("Connected!");
@@ -84,7 +84,7 @@ function connect() {
 		connection.on("close", function(code, description) {
 			console.log("\x1b[31mConnection closed: " + code + " (" + description + ")\x1b[0m");
 			if(code == 1006) {
-                server.close();
+				server.close();
 				console.log("\x1b[31m1006 -> Connection terminated! Attempting resume...\x1b[0m");
 				resume = true;
 				reconnect(false);
@@ -143,30 +143,30 @@ function connect() {
 let clients = [];
 
 function tcpserver(client) {
-    console.log("TCP client connection!");
-    client.setEncoding("utf8");
-    client.on("close", (a) => {
-        console.log("TCP client disconnect!");
-        let r = -1;
-        for(c in clients) {
-            if(clients[c] === client) {
-                r = c;
-            }
-        }
-        clients.splice(r, 1);
-    });
-    client.on("error", (e) => {
-        console.log("TCP ERROR: " + e);
-    });
-    clients.push(client);
+	console.log("TCP client connection!");
+	client.setEncoding("utf8");
+	client.on("close", (a) => {
+		console.log("TCP client disconnect!");
+		let r = -1;
+		for(c in clients) {
+			if(clients[c] === client) {
+				r = c;
+			}
+		}
+		clients.splice(r, 1);
+	});
+	client.on("error", (e) => {
+		console.log("TCP ERROR: " + e);
+	});
+	clients.push(client);
 }
 
 function broadcast(data) {
-    console.log("Clients: " + clients.length);
-    let pack = JSON.stringify(data);
-    for(client of clients) {
-        client.write(pack);
-    }
+	console.log("Clients: " + clients.length);
+	let pack = JSON.stringify(data);
+	for(client of clients) {
+		client.write(pack);
+	}
 }
 
 function writeConfig() {
@@ -219,7 +219,7 @@ function clearSession() {
 
 function event(packet) {
 	console.log(packet);
-    
+	
 	switch(packet.t) {
 		case "READY":
 			console.log("READY");
@@ -231,7 +231,7 @@ function event(packet) {
 			console.log("Session resumed!");
 			break;
 		default:
-            broadcast(packet);
+			broadcast(packet);
 			break;
 	}
 }
