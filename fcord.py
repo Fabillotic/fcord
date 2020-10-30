@@ -5,6 +5,7 @@ from threading import Thread
 import sys
 import os
 import fcord
+import pathlib
 
 token = None
 user_agent = None
@@ -15,7 +16,8 @@ events = []
 def main():
     global sock, token, user_agent, events, listeners
     
-    sys.path.append(os.path.abspath("C:/Users/Fabillo/Desktop/fcord/mods/"))
+    sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods").resolve()))
+    print(sys.path)
     import simple_command
     listeners.append(simple_command.event)
     
