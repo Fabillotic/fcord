@@ -43,7 +43,7 @@ def main():
 	while True:
 		done = []
 		for n, e in enumerate(events):
-			print("Event: " + json.dumps(e))
+			#print("Event: " + json.dumps(e))
 			for l in listeners:
 				l(e)
 			done.append(n)
@@ -58,7 +58,6 @@ def recv():
 	while True:
 		data = sock.recv(8192).decode("utf-8")
 		event = json.loads(data)
-		print("Message")
 		events.append(event)
 
 def call(method, endpoint, data=None, headers={}):
