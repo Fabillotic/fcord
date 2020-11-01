@@ -62,33 +62,25 @@ def join(e):
 	if len(s) > 2:
 		u = s[2]
 		if u.startswith("<@") and u.endswith(">"):
-			print("Found mention!")
 			u = u[2:-1]
 			if u.startswith("!"):
 				u = u[1:]
 			notwaiting = None
-			print("Waiting:")
-			print(waiting)
 			for x in waiting:
 				if x[1] == e["d"]["author"]["id"]:
 					if x[0] == u:
 						print("Started match!")
 						send("Game started!", e)
-						matches.append([[x[0], x[1], 1], 0])
+						match = [[x[0], x[1], 1], 0]
+						matches.append(match)
+						send_board(e, match)
 						notwaiting = x
 						break
-			print("Notwaiting:")
-			print(notwaiting)
 			if notwaiting:
 				waiting.remove(notwaiting)
 			else:
 				print("No match started.")
 				send("No one wanted to play with you.", e)
-	
-	print("Matches:")
-	print(matches)
-	print("Waiting:")
-	print(waiting)
 
 def play(e):
 	s = e["d"]["content"].split(" ")
@@ -134,20 +126,13 @@ def play(e):
 				else:
 					match[0][2] = 1
 				print("Made move! Board: " + str(match[1]))
-				os.chdir(os.path.abspath(pathlib.Path(__file__).parent.resolve()))
-				p = subprocess.Popen(["java", "-jar", "TicTacToe.jar", "tic.png", str(match[1])], stdout=subprocess.PIPE)
-				win = int(p.stdout.read().decode("utf-8"))
+				d = send_board(e, match)
+				win = int(d.decode("utf-8"))
 				print(win)
-				f = open("tic.png", "rb")
-				d = f.read()
-				f.close()
-				r = request("POST", "https://discord.com/api/channels/" + e["d"]["channel_id"] + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent}, files={"tic.png": d, "payload_json": (None, '{"content": "Board:", "embed": {"image": {"url": "attachment://tic.png"}}}'.encode("utf-8"))})
-				os.remove("tic.png")
 				if (win & 0b11) != 0:
 					print("WIN: " + str(win & 0b11))
 					matches.remove(match)
 					print("REMOVED MATCH!")
-					print(matches)
 					send(("circle" if (win & 0b11 == 2) else "cross") + " won!", e)
 				else:
 					full = True
@@ -195,3 +180,13 @@ def stop(e):
 
 def send(content, e):
 	r = request("POST", "https://discord.com/api/channels/" + e["d"]["channel_id"] + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent, "Content-Type": "application/json"}, data='{"content": "' + content + '"}')
+
+def send_board(e, match):
+	os.chdir(os.path.abspath(pathlib.Path(__file__).parent.resolve()))
+	p = subprocess.Popen(["java", "-jar", "TicTacToe.jar", "tic.png", str(match[1])], stdout=subprocess.PIPE)
+	p.wait()
+	f = open("tic.png", "rb")
+	r = request("POST", "https://discord.com/api/channels/" + e["d"]["channel_id"] + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent}, files={"tic.png": f.read(), "payload_json": (None, '{"content": "Board:", "embed": {"image": {"url": "attachment://tic.png"}}}'.encode("utf-8"))})
+	f.close()
+	os.remove("tic.png")
+	return p.stdout.read()
