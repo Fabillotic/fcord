@@ -17,9 +17,11 @@ def main():
 	global sock, token, user_agent, events, listeners
 	
 	sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods").resolve()))
-	print(sys.path)
+	
 	import simple_command
 	listeners.append(simple_command.event)
+	import tictactoe
+	listeners.append(tictactoe.event)
 	
 	fcord.call = call
 	
@@ -28,6 +30,8 @@ def main():
 	auth_data = json.loads(auth_data)
 	token = auth_data["token"]
 	user_agent = auth_data["user_agent"]
+	fcord.token = token
+	fcord.user_agent = user_agent
 	auth.close()
 	print("Loaded authorization data. Connecting to server...")
 	sock = socket(AF_INET, SOCK_STREAM)
