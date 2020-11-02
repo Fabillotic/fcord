@@ -179,7 +179,7 @@ def stop(e):
 		send("You left the game.", e)
 
 def send(content, e):
-	r = request("POST", "https://discord.com/api/channels/" + e["d"]["channel_id"] + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent, "Content-Type": "application/json"}, data='{"content": "' + content + '"}')
+	fcord.send(content, e["d"]["channel_id"])
 
 def send_board(e, match):
 	os.chdir(os.path.abspath(pathlib.Path(__file__).parent.resolve()))
