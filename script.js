@@ -68,7 +68,6 @@ function connect() {
 	receivedAck = true;
 	
 	let websocket = new WebSocketClient();
-	clients = [];
 	if(server != null) {
 		server.close();
 		server = null;
@@ -85,7 +84,7 @@ function connect() {
 			console.log("\x1b[31mConnection closed: " + code + " (" + description + ")\x1b[0m");
 			if(code == 1006) {
 				server.close();
-				console.log("\x1b[31m1006 -> Connection terminated! Attempting resume...\x1b[0m");
+				console.log("\x1b[31mConnection terminated! Attempting resume...\x1b[0m");
 				resume = true;
 				reconnect(false);
 			}
