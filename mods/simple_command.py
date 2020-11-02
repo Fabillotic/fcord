@@ -9,4 +9,4 @@ def command(c, channel):
 	s = c.split(" ")
 	if s[0].lower() == "test":
 		print("(SIMPLE) testing...")
-		fcord.call("POST", "/channels/" + channel + "/messages", data='{"content": "TEST!"}', headers={"Content-Type": "application/json"}).text
+		fcord.send("TEST!", channel)
