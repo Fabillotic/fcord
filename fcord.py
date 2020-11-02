@@ -24,6 +24,8 @@ def main():
 	listeners.append(tictactoe.event)
 	
 	fcord.call = call
+	fcord.hasPermission = hasPermission
+	fcord.send = send
 	
 	auth = open("auth.txt", "r")
 	auth_data = auth.read()
@@ -43,7 +45,6 @@ def main():
 	while True:
 		done = []
 		for n, e in enumerate(events):
-			#print("Event: " + json.dumps(e))
 			for l in listeners:
 				l(e)
 			done.append(n)
@@ -59,6 +60,19 @@ def recv():
 		data = sock.recv(8192).decode("utf-8")
 		event = json.loads(data)
 		events.append(event)
+
+def hasPermission(guild, member_roles, permission):
+	roles = request("GET", "https://discord.com/api/v8/guilds/" + guild + "/roles", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent}).json()
+	hasPerm = False
+	for r in roles:
+		for mr in member_roles:
+			if r["id"] == mr and ((int(r["permissions"]) >> permission) & 1) == 1:
+				hasPerm = True
+				break
+	return hasPerm
+
+def send(content, channel):
+	r = request("POST", "https://discord.com/api/channels/" + channel + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent, "Content-Type": "application/json"}, data='{"content": "' + content + '"}')
 
 def call(method, endpoint, data=None, headers={}):
 	global token, user_agent
