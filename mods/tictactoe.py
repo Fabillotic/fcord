@@ -9,22 +9,34 @@ matches = []
 
 def event(e):
 	if e["t"].lower() == "message_create":
-		if e["d"]["content"].startswith("!tic"):
-			c = e["d"]["content"]
-			s = c.split(" ")
-			if len(s) > 1:
-				if s[1].lower() == "start":
-					print("START")
-					start(e)
-				elif s[1].lower() == "join":
-					print("JOIN")
-					join(e)
-				elif s[1].lower() == "stop" or s[1].lower() == "exit":
-					print("STOP")
-					stop(e)
-				else:
-					print("PLAY")
-					play(e)
+		if e["d"]["content"].startswith("!tic") and str(e["d"]["author"]["id"]) != "762681831987740742":
+			if e["d"].get("guild_id"):
+				c = e["d"]["content"]
+				s = c.split(" ")
+				if len(s) > 1:
+					if s[1].lower() == "start":
+						print("START")
+						start(e)
+					elif s[1].lower() == "join":
+						print("JOIN")
+						join(e)
+					elif s[1].lower() == "stop" or s[1].lower() == "exit":
+						print("STOP")
+						stop(e)
+					elif s[1].lower() == "help":
+						send_help(e)
+					else:
+						print("PLAY")
+						play(e)
+				elif len(s) == 1:
+					send_help(e)
+			else:
+				print("Not in guild!")
+				send("You have to be in a guild chat to play tictactoe!", e)
+
+def send_help(e):
+	print("HELP")
+	fcord.send_embed("Tic Tac Toe", {"fields": [{"name": "Commands", "value": "!tic start @User -> Start a match.\n!tic join @User -> Join a match you have been invited to.\n!tic (number from 1 to 9) -> Make a move.\n!tic stop -> Stop waiting / playing.", "inline": True}]}, e["d"]["channel_id"])
 
 def start(e):
 	s = e["d"]["content"].split(" ")
@@ -43,11 +55,15 @@ def start(e):
 	if len(s) > 2:
 		u = s[2]
 		if u.startswith("<@") and u.endswith(">"):
+			if "<@" in u[2:]:
+				send("Invalid mention!", e)
+				return
 			u = u[2:-1]
 			if u.startswith("!"):
 				u = u[1:]
 			waiting.append((e["d"]["author"]["id"], u))
 			print("Added to waiting!")
+			print(waiting)
 			send("Waiting for partner!", e)
 
 def join(e):
