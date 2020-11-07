@@ -72,8 +72,11 @@ def hasPermission(guild, member_roles, permission):
 	return hasPerm
 
 def send(content, channel):
-	r = request("POST", "https://discord.com/api/channels/" + channel + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent, "Content-Type": "application/json"}, data='{"content": "' + content + '"}')
+	return request("POST", "https://discord.com/api/channels/" + channel + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent, "Content-Type": "application/json"}, data='{"content": "' + content + '"}')
 
+def send_embed(content, embed, channel):
+	return request("POST", "https://discord.com/api/channels/" + channel + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent, "Content-Type": "application/json"}, data='{"content": "' + content + '", "embed": ' + json.dumps(embed) + '}')
+	
 def call(method, endpoint, data=None, headers={}):
 	global token, user_agent
 	
