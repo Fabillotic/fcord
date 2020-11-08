@@ -17,6 +17,7 @@ def main():
 	global sock, token, user_agent, events, listeners
 	
 	sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods").resolve()))
+	sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods/tictactoe").resolve()))
 	
 	import simple_command
 	listeners.append(simple_command.event)
