@@ -74,7 +74,7 @@ def event(e):
 				request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(emoji)) + "/" + e["d"]["user_id"], headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
 def send_help(e):
 	print("HELP")
-	fcord.send_embed("Tic Tac Toe", {"fields": [{"name": "Commands", "value": "!tic start @User -> Start a match.\n!tic join @User -> Join a match you have been invited to.\n!tic (number from 1 to 9) -> Make a move.\n!tic stop -> Stop waiting / playing.", "inline": True}]}, e["d"]["channel_id"])
+	fcord.send_embed("Tic Tac Toe", {"fields": [{"name": "Commands", "value": "!tic help -> Show this screen\n!tic start @User -> Start a match.\n!tic join @User -> Join a match you have been invited to.\n!tic (number from 1 to 9) -> Make a move.\n!tic stop -> Stop waiting / playing.", "inline": True}, {"name": "Mechanics", "value": "After you start a game, the mentioned person can join either through the reactions or through the join command.\nThe person who started the game will have the first move. If the game is stopped, nobody wins.", "inline": True}]}, e["d"]["channel_id"])
 
 def start(e):
 	s = e["d"]["content"].split(" ")
@@ -135,6 +135,9 @@ def join(e):
 						notwaiting = x
 						break
 			if notwaiting:
+				request("DELETE", "https://discord.com/api/v8/channels/" + notwaiting[2][1] + "/messages/" + notwaiting[2][0] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+				time.sleep(0.25)
+				request("DELETE", "https://discord.com/api/v8/channels/" + notwaiting[2][1] + "/messages/" + notwaiting[2][0] + "/reactions/" + quote(chr(9989)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
 				waiting.remove(notwaiting)
 			else:
 				print("No match started.")
@@ -218,6 +221,9 @@ def stop(e):
 			remove_waiting = x
 			break
 	if remove_waiting:
+		request("DELETE", "https://discord.com/api/v8/channels/" + remove_waiting[2][1] + "/messages/" + remove_waiting[2][0] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+		time.sleep(0.25)
+		request("DELETE", "https://discord.com/api/v8/channels/" + remove_waiting[2][1] + "/messages/" + remove_waiting[2][0] + "/reactions/" + quote(chr(9989)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
 		waiting.remove(remove_waiting)
 		print("Removed wait!")
 		send("You are not waiting anymore.", e)
