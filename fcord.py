@@ -62,7 +62,7 @@ def recv():
 		event = json.loads(data)
 		events.append(event)
 
-def hasPermission(guild, member_roles, permission):
+def has_permission(guild, member_roles, permission):
 	roles = request("GET", "https://discord.com/api/v8/guilds/" + guild + "/roles", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent}).json()
 	hasPerm = False
 	for r in roles:
