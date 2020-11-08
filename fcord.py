@@ -23,9 +23,11 @@ def main():
 	listeners.append(simple_command.event)
 	import tictactoe
 	listeners.append(tictactoe.event)
+	import clear
+	listeners.append(clear.event)
 	
 	fcord.call = call
-	fcord.hasPermission = hasPermission
+	fcord.has_permission = has_permission
 	fcord.send = send
 	
 	auth = open("auth.txt", "r")
