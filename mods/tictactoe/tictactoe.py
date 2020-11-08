@@ -4,13 +4,15 @@ import os
 import pathlib
 from requests import request
 from PIL import Image, ImageDraw, ImageFont
+from urllib.parse import quote
+import time
 
 waiting = []
 matches = []
 
 def event(e):
 	if e["t"].lower() == "message_create":
-		if e["d"]["content"].startswith("!tic") and str(e["d"]["author"]["id"]) != "762681831987740742":
+		if e["d"]["content"].startswith("!tic") and not "bot" in e["d"]["author"]:
 			if e["d"].get("guild_id"):
 				c = e["d"]["content"]
 				s = c.split(" ")
@@ -34,7 +36,42 @@ def event(e):
 			else:
 				print("Not in guild!")
 				send("You have to be in a guild chat to play tictactoe!", e)
-
+	if e["t"].lower() == "message_reaction_add" and not "bot" in e["d"]["member"]["user"]:
+		emoji = ord(e["d"]["emoji"]["name"])
+		print(emoji)
+		
+		if emoji == 9989 or emoji == 10060:
+			w = None
+			for x in waiting:
+				if x[1] == e["d"]["member"]["user"]["id"]:
+					if x[2][0] == e["d"]["message_id"]:
+						w = x
+						break
+			
+			if w:
+				if emoji == 9989: #Accept
+					print("Accept")
+					if x[0][0] == e["d"]["member"]["user"]["id"]:
+						print("Currently in game!")
+						return
+				
+				request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+				time.sleep(0.25)
+				request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(9989)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+				
+				waiting.remove(w)
+				print("Removed from waiting.")
+				
+				if emoji == 10060: #Deny
+					print("Deny")
+					return
+				
+				match = [[w[0], w[1], 1], 0]
+				matches.append(match)
+				send_board(e["d"]["channel_id"], match)
+			else:
+				print("YOU SHALL NOT REACT!")
+				request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(emoji)) + "/" + e["d"]["user_id"], headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
 def send_help(e):
 	print("HELP")
 	fcord.send_embed("Tic Tac Toe", {"fields": [{"name": "Commands", "value": "!tic start @User -> Start a match.\n!tic join @User -> Join a match you have been invited to.\n!tic (number from 1 to 9) -> Make a move.\n!tic stop -> Stop waiting / playing.", "inline": True}]}, e["d"]["channel_id"])
@@ -62,10 +99,14 @@ def start(e):
 			u = u[2:-1]
 			if u.startswith("!"):
 				u = u[1:]
-			waiting.append((e["d"]["author"]["id"], u))
-			print("Added to waiting!")
-			print(waiting)
-			send("Waiting for partner!", e)
+			w = [e["d"]["author"]["id"], u]
+			print("About to add to waiting!")
+			msg = send("Waiting for partner! You partner can click on the reaction to join easily.", e).json()
+			request("PUT", "https://discord.com/api/v8/channels/" + msg["channel_id"] + "/messages/" + msg["id"] + "/reactions/" + quote(chr(9989)) + "/@me", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+			time.sleep(0.25)
+			request("PUT", "https://discord.com/api/v8/channels/" + msg["channel_id"] + "/messages/" + msg["id"] + "/reactions/" + quote(chr(10060)) + "/@me", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+			w.append((msg["id"], msg["channel_id"]))
+			waiting.append(tuple(w))
 
 def join(e):
 	s = e["d"]["content"].split(" ")
@@ -90,7 +131,7 @@ def join(e):
 						send("Game started!", e)
 						match = [[x[0], x[1], 1], 0]
 						matches.append(match)
-						send_board(e, match)
+						send_board(e["d"]["channel_id"], match)
 						notwaiting = x
 						break
 			if notwaiting:
@@ -143,7 +184,7 @@ def play(e):
 				else:
 					match[0][2] = 1
 				print("Made move! Board: " + str(match[1]))
-				win = send_board(e, match)
+				win = send_board(e["d"]["channel_id"], match)
 				print(win)
 				if (win & 0b11) != 0:
 					print("WIN: " + str(win & 0b11))
@@ -195,7 +236,7 @@ def stop(e):
 		send("You left the game.", e)
 
 def send(content, e):
-	fcord.send(content, e["d"]["channel_id"])
+	return fcord.send(content, e["d"]["channel_id"])
 
 def make_board(num):
 	state =[]
@@ -266,10 +307,10 @@ def get_win(state):
 		return (state[3] | (0 << 2 | 3 << 6 | 6 << 10), "lc", (0, 3, 6)) #Left column
 	return (0, "", (0, 0, 0))
 
-def send_board(e, match):
+def send_board(channel, match):
 	win = make_board(match[1])
 	f = open(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "tic.png")), "rb")
-	r = request("POST", "https://discord.com/api/channels/" + e["d"]["channel_id"] + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent}, files={"tic.png": f.read(), "payload_json": (None, '{"content": "Board:", "embed": {"image": {"url": "attachment://tic.png"}}}'.encode("utf-8"))})
+	r = request("POST", "https://discord.com/api/channels/" + channel + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent}, files={"tic.png": f.read(), "payload_json": (None, '{"content": "Board:", "embed": {"image": {"url": "attachment://tic.png"}}}'.encode("utf-8"))})
 	f.close()
 	os.remove(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "tic.png")))
 	return win
