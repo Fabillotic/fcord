@@ -127,13 +127,17 @@ def join(e):
 			for x in waiting:
 				if x[1] == e["d"]["author"]["id"]:
 					if x[0] == u:
-						print("Started match!")
-						send("Game started!", e)
-						match = [[x[0], x[1], 1], 0]
-						matches.append(match)
-						send_board(e["d"]["channel_id"], match)
-						notwaiting = x
-						break
+						if x[2][1] == e["d"]["channel_id"]:
+							print("Started match!")
+							send("Game started!", e)
+							match = [[x[0], x[1], 1], 0]
+							matches.append(match)
+							send_board(e["d"]["channel_id"], match)
+							notwaiting = x
+							break
+						else:
+							send("You have to be in the same channel as the other person!", e)
+							return
 			if notwaiting:
 				request("DELETE", "https://discord.com/api/v8/channels/" + notwaiting[2][1] + "/messages/" + notwaiting[2][0] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
 				time.sleep(0.25)
@@ -220,6 +224,7 @@ def stop(e):
 		if x[0] == a:
 			remove_waiting = x
 			break
+	
 	if remove_waiting:
 		request("DELETE", "https://discord.com/api/v8/channels/" + remove_waiting[2][1] + "/messages/" + remove_waiting[2][0] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
 		time.sleep(0.25)
@@ -236,6 +241,7 @@ def stop(e):
 		if m[0][1] == a and m[0][2] == 2:
 			remove_match = m
 			break
+	
 	if remove_match:
 		matches.remove(remove_match)
 		print("Removed match!")
