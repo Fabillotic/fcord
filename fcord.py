@@ -25,6 +25,8 @@ def main():
 	listeners.append(tictactoe.event)
 	import clear
 	listeners.append(clear.event)
+	import util
+	listeners.append(util.event)
 	
 	fcord.call = call
 	fcord.has_permission = has_permission
