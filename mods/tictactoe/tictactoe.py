@@ -1,4 +1,5 @@
 import fcord
+import util
 import subprocess
 import os
 import pathlib
@@ -36,42 +37,41 @@ def event(e):
 			else:
 				print("Not in guild!")
 				send("You have to be in a guild chat to play tictactoe!", e)
-	if e["t"].lower() == "message_reaction_add" and not "bot" in e["d"]["member"]["user"]:
-		emoji = ord(e["d"]["emoji"]["name"])
-		print(emoji)
+
+def button(e, args):
+	emoji = ord(e["d"]["emoji"]["name"])
+	if emoji == 9989 or emoji == 10060:
+		w = None
+		for x in waiting:
+			if x[1] == e["d"]["member"]["user"]["id"]:
+				if x[2][0] == e["d"]["message_id"]:
+					w = x
+					break
 		
-		if emoji == 9989 or emoji == 10060:
-			w = None
-			for x in waiting:
-				if x[1] == e["d"]["member"]["user"]["id"]:
-					if x[2][0] == e["d"]["message_id"]:
-						w = x
-						break
-			
-			if w:
-				if emoji == 9989: #Accept
-					print("Accept")
-					if x[0][0] == e["d"]["member"]["user"]["id"]:
-						print("Currently in game!")
-						return
-				
-				request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-				time.sleep(0.25)
-				request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(9989)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-				
-				waiting.remove(w)
-				print("Removed from waiting.")
-				
-				if emoji == 10060: #Deny
-					print("Deny")
+		if w:
+			if emoji == 9989: #Accept
+				print("Accept")
+				if x[0][0] == e["d"]["member"]["user"]["id"]:
+					print("Currently in game!")
 					return
-				
-				match = [[w[0], w[1], 1], 0]
-				matches.append(match)
-				send_board(e["d"]["channel_id"], match)
-			else:
-				print("YOU SHALL NOT REACT!")
-				request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(emoji)) + "/" + e["d"]["user_id"], headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+			
+			request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+			time.sleep(0.25)
+			request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(9989)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+			
+			waiting.remove(w)
+			print("Removed from waiting.")
+			
+			if emoji == 10060: #Deny
+				print("Deny")
+				return
+			
+			match = [[w[0], w[1], 1], 0]
+			matches.append(match)
+			send_board(e["d"]["channel_id"], match)
+		else:
+			print("YOU SHALL NOT REACT!")
+			request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(emoji)) + "/" + e["d"]["user_id"], headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
 def send_help(e):
 	print("HELP")
 	fcord.send_embed("Tic Tac Toe", {"fields": [{"name": "Commands", "value": "!tic help -> Show this screen\n!tic start @User -> Start a match.\n!tic join @User -> Join a match you have been invited to.\n!tic (number from 1 to 9) -> Make a move.\n!tic stop -> Stop waiting / playing.", "inline": True}, {"name": "Mechanics", "value": "After you start a game, the mentioned person can join either through the reactions or through the join command.\nThe person who started the game will have the first move. If the game is stopped, nobody wins.", "inline": True}]}, e["d"]["channel_id"])
@@ -102,9 +102,9 @@ def start(e):
 			w = [e["d"]["author"]["id"], u]
 			print("About to add to waiting!")
 			msg = send("Waiting for partner! You partner can click on the reaction to join easily.", e).json()
-			request("PUT", "https://discord.com/api/v8/channels/" + msg["channel_id"] + "/messages/" + msg["id"] + "/reactions/" + quote(chr(9989)) + "/@me", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+			util.button(9989,  msg["id"], msg["channel_id"], button, [e], [u])
 			time.sleep(0.25)
-			request("PUT", "https://discord.com/api/v8/channels/" + msg["channel_id"] + "/messages/" + msg["id"] + "/reactions/" + quote(chr(10060)) + "/@me", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
+			util.button(10060, msg["id"], msg["channel_id"], button, [e], [u])
 			w.append((msg["id"], msg["channel_id"]))
 			waiting.append(tuple(w))
 
@@ -235,12 +235,8 @@ def stop(e):
 	
 	remove_match = None
 	for m in matches:
-		if m[0][0] == a and m[0][2] == 1:
+		if m[0][0] == a or m[0][1] == a:
 			remove_match = m
-			break
-		if m[0][1] == a and m[0][2] == 2:
-			remove_match = m
-			break
 	
 	if remove_match:
 		matches.remove(remove_match)
