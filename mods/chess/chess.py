@@ -4,7 +4,7 @@ import chess
 from requests import request
 
 chess.waiting = [] #Content -> [%channel%, %waiting_user%, %waiting_for_user%, %response_message_id%]
-chess.matches = [] #Content -> [%channel%, %player1%, %player2%, %current_player -> 0 / 1%, [%piece_id / -1%]]
+chess.matches = [] #Content -> [%channel%, %player0%, %player1%, %current_player -> 0 / 1%, [%piece_id / -1%]]
 chess.pieces = dict(zip(["k", "q", "r1", "r2", "b1", "b2", "n1", "n2"] + ["p" + str(x) for x in range(1, 9)], [x for x in range(16)]))
 
 def event(e):
@@ -32,7 +32,7 @@ def event(e):
                     else:
                         fcord.send("Invalid syntax! Syntax: '!chess (piece) (position)'", e["d"]["channel_id"])
                 else: #Invalid command!
-                    fcord.send("Invalid command! Type '!chess help' to show a help screen.", e["d"]["channel_id"])
+                    send_help(e)
 
 def start(e, a):
     for x in chess.waiting:
@@ -46,8 +46,12 @@ def start(e, a):
     if len(a) > 2:
         if a[2].startswith("<@") and a[2].endswith(">") and not ">" in a[2][:-1]:
             u = a[2][2:-1]
+            if u.startswith("!"):
+                u = u[1:]
             msg = fcord.send("Added to waiting. Your partner can use the reactions to join easily.").json()
             chess.waiting.append(e["d"]["channel_id"], e["d"]["author"]["id"], u, msg["id"])
+        else:
+            fcord.send("Syntax: '!tic start @User'")
 
 def join(e, a):
     pass
