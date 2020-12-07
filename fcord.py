@@ -18,16 +18,15 @@ def main():
     
     sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods").resolve()))
     sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods/tictactoe").resolve()))
-    
-    import simple_command
-    listeners.append(simple_command.event)
-    import tictactoe
-    listeners.append(tictactoe.event)
-    import clear
-    listeners.append(clear.event)
-    import util
-    listeners.append(util.event)
-    
+    sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods/chess").resolve()))
+
+    import simple_command; listeners.append(simple_command.event)
+    import util; listeners.append(util.event)
+    import xyz; xyz.register()
+    import tictactoe; tictactoe.register()
+    import clear; listeners.append(clear.event)
+    import chess; listeners.append(chess.event)
+
     fcord.call = call
     fcord.has_permission = has_permission
     fcord.send = send
