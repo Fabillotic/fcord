@@ -51,7 +51,7 @@ def start(e, a):
             msg = fcord.send("Added to waiting. Your partner can use the reactions to join easily.").json()
             chess.waiting.append(e["d"]["channel_id"], e["d"]["author"]["id"], u, msg["id"])
         else:
-            fcord.send("Syntax: '!tic start @User'")
+            fcord.send("Syntax: '!chess start @User'")
 
 def join(e, a):
     pass
