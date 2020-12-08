@@ -23,9 +23,9 @@ def main():
     import simple_command; listeners.append(simple_command.event)
     import util; listeners.append(util.event)
     import xyz; xyz.register()
+    import chess; chess.register()
     import tictactoe; tictactoe.register()
     import clear; listeners.append(clear.event)
-    import chess; listeners.append(chess.event)
 
     fcord.call = call
     fcord.has_permission = has_permission
