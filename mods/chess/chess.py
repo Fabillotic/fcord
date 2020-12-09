@@ -14,15 +14,34 @@ def get_moves():
     for y in range(1, 9):
         a = chr(96 + y)
         for z in range(1, 9):
-            a += str(z)
-            x.append(a)
+            x.append(a + str(z))
     return [x, x]
 
 def move(e, move, player, state, preview):
     if preview:
         send_board(state, e["d"]["channel_id"])
         return
+    
+    s = (ord(move[0][0]) - 97, ord(move[0][1]) - 49)
+    f = (ord(move[1][0]) - 97, ord(move[1][1]) - 49)
+    p = state[s[0]][s[1]]
+    o = state[f[0]][f[1]]
+    
+    print(str(s) + ", " + str(p))
+    print(str(f) + ", " + str(o))
+    
+    if not p:
+        fcord.send("WHAT SHOULD I MOVE? THERE IS NO PIECE ON " + move[0].upper() + "!", e["d"]["channel_id"])
+        return
+    
+    c = "W" if player == 0 else "B"
+    print(c)
+    
+    if p[1] != c:
+        fcord.send("Did you just try to move your opponents piece?", e["d"]["channel_id"])
+        return
 
+def can_move(s, f, p, o): #Start position, to position, piece, piece on other position
 
 def send_board(state, channel):
     board = "     " + "1   " + chr(int("2009", 16)) + "2   " + chr(int("2009", 16)) + "3   " + chr(int("2009", 16)) + "4   " + chr(int("2009", 16)) + "5   " + chr(int("2009", 16)) + "6   " + chr(int("2009", 16)) + "7   " + chr(int("2009", 16)) + "8\n"
