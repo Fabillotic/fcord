@@ -39,7 +39,7 @@ def get_moves():
         a = chr(96 + y)
         for z in range(1, 9):
             x.append(a + str(z))
-    return [x, x]
+    return [x, x, [None, "queen", "rook", "bishop", "knight", "q", "r", "b", "n", "Q", "R", "B", "N"]]
 
 def move(e, move_in, player, state, preview):
     board = Board(state)
@@ -50,7 +50,10 @@ def move(e, move_in, player, state, preview):
     
     m = move_in[0] + move_in[1]
     move = Move.from_uci(m)
-
+    print(move)
+    print(move_in)
+    print(state)
+    print(list(board.legal_moves))
     if not move in board.legal_moves:
         fcord.send("Invalid move!", e["d"]["channel_id"])
         return
