@@ -127,10 +127,20 @@ def event(e):
                     game[7][coms[0]](e, game, coms[1:])
                 else:
                     valid = True
-                    for n, x in enumerate(coms):
-                        if not x in game[1][n]:
-                            valid = False
-                            break
+                    if len(coms) < len(game[1]): #Check if not enough arguments and if they can be ignored
+                        d = len(game[1]) - len(coms)
+                        for n, x in enumerate(game[1][-d:]):
+                            if not None in game[1][-d:][n]:
+                                valid = False
+                                break
+                    if valid:
+                        for n, x in enumerate(coms):
+                            if n >= len(game[1]): #Check if too many arguments.
+                                valid = False
+                                break
+                            if not x in game[1][n]:
+                                valid = False
+                                break
                     if not valid:
                         fcord.send("Invalid command or move!", e["d"]["channel_id"])
                         return
