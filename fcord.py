@@ -15,21 +15,19 @@ events = []
 
 def main():
     global sock, token, user_agent, events, listeners
-    
-    sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods").resolve()))
-    sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods/tictactoe").resolve()))
-    sys.path.append(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "mods/chess").resolve()))
+
+    sys.path.append(relative("mods"))
+    sys.path.append(relative("mods/tictactoe"))
+    sys.path.append(relative("mods/chess"))
 
     import simple_command; listeners.append(simple_command.event)
     import util; listeners.append(util.event)
     import xyz; xyz.register()
-    import chess; chess.register()
+    import chess_mod; chess_mod.register(); chess_mod.init()
     import tictactoe; tictactoe.register()
     import clear; listeners.append(clear.event)
 
-    fcord.call = call
-    fcord.has_permission = has_permission
-    fcord.send = send
+    fcord.call = call; fcord.has_permission = has_permission; fcord.send = send
     
     auth = open("auth.txt", "r")
     auth_data = auth.read()
@@ -88,6 +86,9 @@ def call(method, endpoint, data=None, headers={}):
     for x in headers:
         h[x] = headers[x]
     return request(method, "https://discord.com/api/v8" + endpoint, data=data, headers=h)
+
+def relative(f):
+    return os.path.abspath(pathlib.Path(pathlib.Path(fcord.__file__).parent, f).resolve())
 
 if __name__ == "__main__":
     main()
