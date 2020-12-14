@@ -1,253 +1,44 @@
 import fcord
 import util
-import subprocess
+import tictactoe
 import os
 import pathlib
 from requests import request
 from PIL import Image, ImageDraw, ImageFont
-from urllib.parse import quote
-import time
 
-waiting = []
-matches = []
-
-def event(e):
-    if e["t"].lower() == "message_create":
-        if e["d"]["content"].startswith("!tic") and not "bot" in e["d"]["author"]:
-            if e["d"].get("guild_id"):
-                c = e["d"]["content"]
-                s = c.split(" ")
-                if len(s) > 1:
-                    if s[1].lower() == "start":
-                        print("START")
-                        start(e)
-                    elif s[1].lower() == "join":
-                        print("JOIN")
-                        join(e)
-                    elif s[1].lower() == "stop" or s[1].lower() == "exit":
-                        print("STOP")
-                        stop(e)
-                    elif s[1].lower() == "help":
-                        send_help(e)
-                    else:
-                        print("PLAY")
-                        play(e)
-                elif len(s) == 1:
-                    send_help(e)
-            else:
-                print("Not in guild!")
-                send("You have to be in a guild chat to play tictactoe!", e)
-
-def button(e, args):
-    emoji = ord(e["d"]["emoji"]["name"])
-    if emoji == 9989 or emoji == 10060:
-        w = None
-        for x in waiting:
-            if x[1] == e["d"]["member"]["user"]["id"]:
-                if x[2][0] == e["d"]["message_id"]:
-                    w = x
-                    break
-        
-        if w:
-            if emoji == 9989: #Accept
-                print("Accept")
-                if x[0][0] == e["d"]["member"]["user"]["id"]:
-                    print("Currently in game!")
-                    return
-            
-            request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-            time.sleep(0.25)
-            request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(9989)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-            
-            waiting.remove(w)
-            print("Removed from waiting.")
-            
-            if emoji == 10060: #Deny
-                print("Deny")
-                return
-            
-            match = [[w[0], w[1], 1], 0]
-            matches.append(match)
-            send_board(e["d"]["channel_id"], match)
+def register():
+    t = util.register_game("tic", [[str(x) for x in range(1, 10)]], tictactoe.move, 0, tictactoe.send_help)
+    
+def move(e, move, player, state, preview):
+    if preview:
+        send_board(e["d"]["channel_id"], state)
+        return
+    i = int(move[0]) - 1
+    if ((state >> (i * 2)) & 0b11) == 0:
+        state = state | ((player + 1) << (i * 2))
+        win = send_board(e["d"]["channel_id"], state)
+        if (win & 0b11) != 0:
+            fcord.send("You have won!", e["d"]["channel_id"])
+            return state, True
         else:
-            print("YOU SHALL NOT REACT!")
-            request("DELETE", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages/" + e["d"]["message_id"] + "/reactions/" + quote(chr(emoji)) + "/" + e["d"]["user_id"], headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-def send_help(e):
-    print("HELP")
-    fcord.send_embed("Tic Tac Toe", {"fields": [{"name": "Commands", "value": "!tic help -> Show this screen\n!tic start @User -> Start a match.\n!tic join @User -> Join a match you have been invited to.\n!tic (number from 1 to 9) -> Make a move.\n!tic stop -> Stop waiting / playing.", "inline": True}, {"name": "Mechanics", "value": "After you start a game, the mentioned person can join either through the reactions or through the join command.\nThe person who started the game will have the first move. If the game is stopped, nobody wins.", "inline": True}]}, e["d"]["channel_id"])
-    
-def start(e):
-    s = e["d"]["content"].split(" ")
-    
-    for x in waiting:
-        if x[0] == e["d"]["author"]["id"]:
-            print("Already in waiting!")
-            send("You are already waiting.", e)
-            return
-    for x in matches:
-                if x[0][0] == e["d"]["author"]["id"] or x[0][1] == e["d"]["author"]["id"]:
-                        print("Currently in game!")
-                send("You are already in a game!", e)
-                return
-    
-    if len(s) > 2:
-        u = s[2]
-        if u.startswith("<@") and u.endswith(">"):
-            if "<@" in u[2:]:
-                send("Invalid mention!", e)
-                return
-            u = u[2:-1]
-            if u.startswith("!"):
-                u = u[1:]
-            w = [e["d"]["author"]["id"], u]
-            print("About to add to waiting!")
-            msg = send("Waiting for partner! You partner can click on the reaction to join easily.", e).json()
-            util.button(9989,  msg["id"], msg["channel_id"], button, [e], [u])
-            time.sleep(0.25)
-            util.button(10060, msg["id"], msg["channel_id"], button, [e], [u])
-            w.append((msg["id"], msg["channel_id"]))
-            waiting.append(tuple(w))
-
-def join(e):
-    s = e["d"]["content"].split(" ")
-    
-    for x in matches:
-        if x[0][0] == e["d"]["author"]["id"]:
-            print("Currently in game!")
-            send("You are already in a game!", e)
-            return
-    
-    if len(s) > 2:
-        u = s[2]
-        if u.startswith("<@") and u.endswith(">"):
-            u = u[2:-1]
-            if u.startswith("!"):
-                u = u[1:]
-            notwaiting = None
-            for x in waiting:
-                if x[1] == e["d"]["author"]["id"]:
-                    if x[0] == u:
-                        if x[2][1] == e["d"]["channel_id"]:
-                            print("Started match!")
-                            send("Game started!", e)
-                            match = [[x[0], x[1], 1], 0]
-                            matches.append(match)
-                            send_board(e["d"]["channel_id"], match)
-                            notwaiting = x
-                            break
-                        else:
-                            send("You have to be in the same channel as the other person!", e)
-                            return
-            if notwaiting:
-                request("DELETE", "https://discord.com/api/v8/channels/" + notwaiting[2][1] + "/messages/" + notwaiting[2][0] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-                time.sleep(0.25)
-                request("DELETE", "https://discord.com/api/v8/channels/" + notwaiting[2][1] + "/messages/" + notwaiting[2][0] + "/reactions/" + quote(chr(9989)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-                waiting.remove(notwaiting)
-            else:
-                print("No match started.")
-                send("No one wanted to play with you.", e)
-
-def play(e):
-    s = e["d"]["content"].split(" ")
-    a = e["d"]["author"]["id"]
-    
-    match = None
-    for m in matches:
-        if m[0][0] == a or m[0][1] == a:
-            match = m
-            break
-    
-    if not match:
-        print("NOT IN A MATCH!")
-        send("You are not in a game.", e)
+            full = True
+            for i in range(9):
+                if (state >> (i * 2)) & 0b11 == 0:
+                    full = False
+            if full:
+                fcord.send("It's a tie! Nobody won. Good job!", e["d"]["channel_id"])
+                return state, True
+    else:
+        fcord.send("Invalid move!", e["d"]["channel_id"])
         return
-    
-    match = None
-    for m in matches:
-        if m[0][0] == a and m[0][2] == 1:
-            match = m
-            break
-        if m[0][1] == a and m[0][2] == 2:
-            match = m
-            break
-    
-    if not match:
-        print("NOT YOUR TURN!")
-        send("Wait for your turn!", e)
-        return
-    
-    if len(s) > 1:
-        try:
-            i = int(s[1])
-            if i < 1 or i > 9:
-                print("INVALID!")
-                send("Invalid number.", e)
-                return
-            i = i - 1
-            if ((match[1] >> (i * 2)) & 0b11) == 0:
-                match[1] = match[1] | (match[0][2] << (i * 2))
-                if match[0][2] == 1:
-                    match[0][2] = 2
-                else:
-                    match[0][2] = 1
-                print("Made move! Board: " + str(match[1]))
-                win = send_board(e["d"]["channel_id"], match)
-                print(win)
-                if (win & 0b11) != 0:
-                    print("WIN: " + str(win & 0b11))
-                    matches.remove(match)
-                    print("REMOVED MATCH!")
-                    send(("circle" if (win & 0b11 == 2) else "cross") + " won!", e)
-                else:
-                    full = True
-                    print(bin(match[1]))
-                    for i in range(9):
-                        if (match[1] >> (i * 2)) & 0b11 == 0:
-                            full = False
-                    if full:
-                        print("BOARD FULL!")
-                        send("It's a tie! Nobody won. Good job!", e)
-                        matches.remove(match)
-                    else:
-                        send("Next turn: " + ("circle" if match[0][2] == 2 else "cross"), e)
-            else:
-                print("INCORRECT POSITIONING!")
-                send("Spot taken.", e)
-        except ValueError:
-            print("INVALID!")
-            send("Invalid number.", e)
 
-def stop(e):
-    a = e["d"]["author"]["id"]
-    remove_waiting = None
-    for x in waiting:
-        if x[0] == a:
-            remove_waiting = x
-            break
-    
-    if remove_waiting:
-        request("DELETE", "https://discord.com/api/v8/channels/" + remove_waiting[2][1] + "/messages/" + remove_waiting[2][0] + "/reactions/" + quote(chr(10060)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-        time.sleep(0.25)
-        request("DELETE", "https://discord.com/api/v8/channels/" + remove_waiting[2][1] + "/messages/" + remove_waiting[2][0] + "/reactions/" + quote(chr(9989)), headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent})
-        waiting.remove(remove_waiting)
-        print("Removed wait!")
-        send("You are not waiting anymore.", e)
-    
-    remove_match = None
-    for m in matches:
-        if m[0][0] == a or m[0][1] == a:
-            remove_match = m
-    
-    if remove_match:
-        matches.remove(remove_match)
-        print("Removed match!")
-        send("You left the game.", e)
+    return state, False
 
-def send(content, e):
-    return fcord.send(content, e["d"]["channel_id"])
+def send_help(c):
+    fcord.send("The help screen will be implemented later. Sometime... Maybe... If I remember...", c)
 
 def make_board(num):
-    state =[]
+    state = []
     
     for i in range(9):
         state.append((num >> (i * 2)) & 0b11)
@@ -315,8 +106,8 @@ def get_win(state):
         return (state[3] | (0 << 2 | 3 << 6 | 6 << 10), "lc", (0, 3, 6)) #Left column
     return (0, "", (0, 0, 0))
 
-def send_board(channel, match):
-    win = make_board(match[1])
+def send_board(channel, state):
+    win = make_board(state)
     f = open(os.path.abspath(pathlib.Path(pathlib.Path(__file__).parent, "tic.png")), "rb")
     r = request("POST", "https://discord.com/api/channels/" + channel + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent}, files={"tic.png": f.read(), "payload_json": (None, '{"content": "Board:", "embed": {"image": {"url": "attachment://tic.png"}}}'.encode("utf-8"))})
     f.close()
