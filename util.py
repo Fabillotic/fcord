@@ -133,6 +133,8 @@ def event(e):
                             if not None in game[1][-d:][n]:
                                 valid = False
                                 break
+                        if d > 0:
+                            coms += [None for x in range(d)]
                     if valid:
                         for n, x in enumerate(coms):
                             if n >= len(game[1]): #Check if too many arguments.
