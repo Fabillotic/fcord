@@ -39,7 +39,7 @@ def get_moves():
         a = chr(96 + y)
         for z in range(1, 9):
             x.append(a + str(z))
-    return [x, x, [None, "queen", "rook", "bishop", "knight", "q", "r", "b", "n", "Q", "R", "B", "N"]]
+    return [x, x, [None, "queen", "rook", "bishop", "knight", "q", "r", "b", "n"]]
 
 def move(e, move_in, player, state, preview):
     board = Board(state)
@@ -48,13 +48,22 @@ def move(e, move_in, player, state, preview):
         send_board(board, e["d"]["channel_id"])
         return
     
-    m = move_in[0] + move_in[1]
-    move = Move.from_uci(m)
-    print(move)
-    print(move_in)
-    print(state)
-    print(list(board.legal_moves))
-    if not move in board.legal_moves:
+    invalid = False
+    move = None
+    try:
+        move = Move(chess.parse_square(move_in[0]), chess.parse_square(move_in[1]), None)
+    except:
+        invalid = True
+        print("Exception on move generation!")
+    if chess.square_rank(move.to_square) + 1 == 8:
+        print("promotion!")
+        move.promotion = get_piece_type(move_in[2])
+    print("move:", move)
+    print("input:", move_in)
+    print("state:", state)
+    print("legal moves:", list(board.legal_moves))
+    invalid = invalid or not move in board.legal_moves
+    if invalid:
         fcord.send("Invalid move!", e["d"]["channel_id"])
         return
 
@@ -72,6 +81,18 @@ def move(e, move_in, player, state, preview):
         return board.fen(), True
 
     return board.fen(), False
+
+def get_piece_type(name):
+    if name == "queen" or name == "q":
+        return chess.QUEEN
+    elif name == "rook" or name == "r":
+        return chess.ROOK
+    elif name == "bishop" or name == "b":
+        return chess.BISHOP
+    elif name == "knight" or name == "n":
+        return chess.KNIGHT
+    else:
+        return chess.QUEEN
 
 chess_mod.images = {}
 
@@ -97,7 +118,6 @@ def send_board(board, channel):
     f.close()
 
     r = request("POST", "https://discord.com/api/channels/" + channel + "/messages", headers={"Authorization": "Bot " + fcord.token, "User-Agent": fcord.user_agent}, files={"img.png": d, "payload_json": (None, '{"content": "Board:", "embed": {"image": {"url": "attachment://img.png"}}}'.encode("utf-8"))})
-    print(r.text)
 
     os.remove(o)
 
