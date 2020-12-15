@@ -44,6 +44,8 @@ def get_moves():
 def move(e, move_in, player, state, preview):
     board = Board(state)
     
+    board.turn = bool(1 - player)
+
     if preview:
         send_board(board, e["d"]["channel_id"])
         return
@@ -51,21 +53,22 @@ def move(e, move_in, player, state, preview):
     invalid = False
     move = None
     try:
-        move = Move(chess.parse_square(move_in[0]), chess.parse_square(move_in[1]), None)
+        move = board.find_move(chess.parse_square(move_in[0]), chess.parse_square(move_in[1]), None)
     except:
         invalid = True
         print("Exception on move generation!")
-    if chess.square_rank(move.to_square) + 1 == 8:
-        print("promotion!")
-        move.promotion = get_piece_type(move_in[2])
+    
     print("move:", move)
     print("input:", move_in)
-    print("state:", state)
-    print("legal moves:", list(board.legal_moves))
-    invalid = invalid or not move in board.legal_moves
+    print("state:", board.fen())
+    
     if invalid:
         fcord.send("Invalid move!", e["d"]["channel_id"])
         return
+    
+    if chess.square_rank(move.to_square) + 1 == 8:
+        print("promotion!")
+        move.promotion = get_piece_type(move_in[2])
 
     board.push(move)
     send_board(board, e["d"]["channel_id"])
