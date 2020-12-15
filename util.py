@@ -100,7 +100,7 @@ def event(e):
                         del game[3][wn]
                     s = getrandbits(1)
                     fcord.send("<@" + [a, u][s] + "> has the first turn!", e["d"]["channel_id"])
-                    game[4].append([a, u, s, game[5]])
+                    game[4].append([a, u, s, game[5], s])
                     game[2](e, None, s, game[5], True) #Invoke preview
                 elif coms[0] == "stop":
                     #check if waiting -> stop waiting, check if playing -> stop playing
@@ -155,12 +155,16 @@ def event(e):
                             pn = n
                     if p:
                         if p[p[2]] == a:
-                            r = game[2](e, coms, p[2], p[3], False)
+                            print(p[2], p[4], p[2] ^ p[4])
+                            r = game[2](e, coms, p[2] ^ p[4], p[3], False)
                             if not r:
                                 r = (None, False)
+                            
                             state, end = r
-                            p[3] = state
-                            p[2] = 1 - p[2]
+                            if state != None:
+                                p[3] = state
+                                p[2] = 1 - p[2]
+
                             if end:
                                 del game[4][pn]
                         else:
@@ -186,7 +190,7 @@ def button(emoji, message, channel, callback, arguments, allowed=None):
 def remove_button(id):
     del util.buttons[id]
 
-util.games = [] #Contains: command(without !), moves(array(array(combinations))), on_move(callback on move), waiting(array(player, waiting_for, response_message, channel)), playing(array(player0, player1, current_player(0 / 1), state)), default_state, on_help(callback for help screen), extra_commands(dict(string(command), function(callback)))
+util.games = [] #Contains: command(without !), moves(array(array(combinations))), on_move(callback on move), waiting(array(player, waiting_for, response_message, channel)), playing(array(player0, player1, current_player(0 / 1), state, player_state(Wich player started))), default_state, on_help(callback for help screen), extra_commands(dict(string(command), function(callback)))
 #On move callbacks -> parameters: default -> event, move(array(combinations)), current_player(0 / 1), state, False
 #                                 preview -> event, None, current_player(0 / 1), default_state, True
 #                     returns: valid move -> new state, end(boolean)
