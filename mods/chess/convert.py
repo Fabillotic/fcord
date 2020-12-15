@@ -35,10 +35,10 @@ def start():
                     h.append((x, y))
         
         darken = lambda c, a: tuple([min(max(x - a, 0), 255) for x in c])
-        cs = [(darken((53, 46, 36, 255), -20), "black"), (darken((231, 201, 137, 255), -20), "white")]
+        
+        cs = [(darken((53, 46, 36, 255), -40), "black"), (darken((231, 201, 137, 255), -40), "white")]
         for x in range(len(cs)):
             c = cs[x]
-            print(c)
             border = []
             for n in h:
                 l[n[0], n[1]] = c[0]
@@ -46,7 +46,9 @@ def start():
             ri = i.resize((i.size[0] * 3 // 4, i.size[1] * 3 // 4), Image.NEAREST)
             pp = ((512 - ri.size[0]) // 2, (512 - ri.size[1]) // 2)
             ni.paste(ri, pp, ri)
-            ni.save(b + "_" + c[1] + ".png")
+            o = b + "_" + c[1] + ".png"
+            ni.save(o)
+            print("Converted file '" + o + "'!")
 
         os.remove(f)
 
