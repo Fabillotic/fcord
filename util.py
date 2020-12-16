@@ -121,7 +121,7 @@ def event(e):
                         del game[4][y]
                         fcord.send("You left the match.", e["d"]["channel_id"])
                 elif coms[0] == "help":
-                    game[6](e["d"]["channel_id"])
+                    send_help(game, e["d"]["channel_id"])
                     return
                 elif coms[0] in game[7]: #Check for extra subcommands.
                     game[7][coms[0]](e, game, coms[1:])
@@ -174,8 +174,12 @@ def event(e):
                         fcord.send("You are not in a game!", e["d"]["channel_id"])
                         return
             else:
-                game[6](e["d"]["channel_id"])
+                send_help(game, e["d"]["channel_id"])
                 return
+
+def send_help(game, channel):
+    d = game[6]()
+    fcord.send_embed(game[8], {"fields": [{"name": "Invites", "value": ("!" + game[0] + " help -> Show this screen.\n!" + game[0] + " start @User -> Wait for a player.\n!" + game[0] + " join @User -> Join a user that is waiting for you.\n!" + game[0] + " stop -> Stop waiting / playing\n"), "inline": True}, {"name": "Gameplay", "value": d, "inline": True}]}, channel)
 
 util.buttons = []
 
@@ -190,19 +194,19 @@ def button(emoji, message, channel, callback, arguments, allowed=None):
 def remove_button(id):
     del util.buttons[id]
 
-util.games = [] #Contains: command(without !), moves(array(array(combinations))), on_move(callback on move), waiting(array(player, waiting_for, response_message, channel)), playing(array(player0, player1, current_player(0 / 1), state, player_state(Wich player started))), default_state, on_help(callback for help screen), extra_commands(dict(string(command), function(callback)))
+util.games = [] #Contains: command(without !), moves(array(array(combinations))), on_move(callback on move), waiting(array(player, waiting_for, response_message, channel)), playing(array(player0, player1, current_player(0 / 1), state, player_state(Wich player started))), default_state, on_help(callback for help screen), extra_commands(dict(string(command), function(callback))), name
 #On move callbacks -> parameters: default -> event, move(array(combinations)), current_player(0 / 1), state, False
 #                                 preview -> event, None, current_player(0 / 1), default_state, True
 #                     returns: valid move -> new state, end(boolean)
 #                              invalid move -> None
 #                              start preview -> None
-#On help callbacks -> parameters: channel
-#                     returns: None
+#On help callbacks -> parameters: None
+#                     returns: description(string)
 #Game subcommand callbacks -> parameters: event, game instance, subsubcommands
 #                             returns: None
 
-def register_game(command, moves, on_move, state, on_help):
-    util.games.append([command, moves, on_move, [], [], state, on_help, dict()])
+def register_game(name, command, moves, on_move, state, on_help):
+    util.games.append([command, moves, on_move, [], [], state, on_help, dict(), name])
     return len(util.games) - 1
 
 def register_game_subcommand(game_id, command, callback):

@@ -10,7 +10,7 @@ import chess
 from chess import Board, Move
 
 def register():
-    util.register_game("chess", chess_mod.get_moves(), chess_mod.move, chess_mod.get_default(), chess_mod.send_help)
+    util.register_game("Chess", "chess", chess_mod.get_moves(), chess_mod.move, chess_mod.get_default(), chess_mod.send_help)
 
 def init():
     if not os.path.exists(rel("mods/chess/images/chess-rook_white.png")): #Just a basic check
@@ -124,5 +124,5 @@ def send_board(board, channel):
 
     os.remove(o)
 
-def send_help(c):
-    fcord.send("Can't help ya right now.", c)
+def send_help():
+    return "!chess (Start position) (End position) (promotion?) -> Make a move from the start position to the end position. You can specify (queen, rook, bishop or knight) if your pawn needs to promote."

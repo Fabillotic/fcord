@@ -7,8 +7,8 @@ from requests import request
 from PIL import Image, ImageDraw, ImageFont
 
 def register():
-    t = util.register_game("tic", [[str(x) for x in range(1, 10)]], tictactoe.move, 0, tictactoe.send_help)
-    
+    t = util.register_game("Tic Tac Toe", "tic", [[str(x) for x in range(1, 10)]], tictactoe.move, 0, tictactoe.send_help)
+
 def move(e, move, player, state, preview):
     if preview:
         send_board(e["d"]["channel_id"], state)
@@ -34,8 +34,8 @@ def move(e, move, player, state, preview):
 
     return state, False
 
-def send_help(c):
-    fcord.send("The help screen will be implemented later. Sometime... Maybe... If I remember...", c)
+def send_help():
+    return "!tic (0 - 9) -> Take the field."
 
 def make_board(num):
     state = []
