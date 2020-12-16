@@ -66,7 +66,7 @@ def move(e, move_in, player, state, preview):
         fcord.send("Invalid move!", e["d"]["channel_id"])
         return
     
-    if chess.square_rank(move.to_square) + 1 == 8:
+    if chess.square_rank(move.to_square) + 1 == 8 and board.piece_type_at(move.from_square) == chess.PAWN:
         print("promotion!")
         move.promotion = get_piece_type(move_in[2])
 
