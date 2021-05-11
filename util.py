@@ -72,7 +72,7 @@ def event(e):
                             fcord.send("Invalid mention!", e["d"]["channel_id"])
                             return
                     else:
-                        fcord.send("Syntax: !" + game[0] + " join @User")
+                        fcord.send("Syntax: !" + game[0] + " join @User", e["d"]["channel_id"])
                         return
                     w = None
                     wn = -1
