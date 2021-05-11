@@ -5,3 +5,4 @@
 !/.gitignore
 /mods/chess/images/*.png
 !/mods/chess/images/board.png
+*__pycache__
