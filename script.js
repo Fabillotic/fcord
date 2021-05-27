@@ -157,6 +157,10 @@ function tcpserver(client) {
 	client.on("error", (e) => {
 		console.log("TCP ERROR: " + e);
 	});
+	client.on("data", (d) => {
+		console.log("TCP COMMAND: " + d);
+		connection.sendUTF(d);
+	});
 	clients.push(client);
 }
 
