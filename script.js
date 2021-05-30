@@ -19,6 +19,7 @@ let connection = null;
 let receivedAck = true;
 
 function start() {
+	process.on("SIGINT", () => {if(connection != null) {connection.close(1001); console.log("Connection closed!");} process.exit(0);});
 	try {
 		let data = JSON.parse(fs.readFileSync(authfile));
 		token = data.token;
