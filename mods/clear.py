@@ -7,7 +7,7 @@ import json
 def event(e):
     if e["t"].lower() == "message_create":
         if e["d"]["content"].startswith("!clear"):
-            if fcord.has_permission(e["d"]["guild_id"], e["d"]["member"]["roles"], 13):
+            if fcord.has_permission(e["d"]["guild_id"], e["d"]["member"]["roles"], 13) or fcord.has_permission(e["d"]["guild_id"], e["d"]["member"]["roles"], 3):
                 r = request("GET", "https://discord.com/api/v8/channels/" + e["d"]["channel_id"] + "/messages", headers={"User-Agent": fcord.user_agent, "Authorization": "Bot " + fcord.token})
                 
                 remove = []
