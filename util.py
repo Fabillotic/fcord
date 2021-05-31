@@ -6,7 +6,11 @@ from random import getrandbits
 
 def event(e):
     if e["t"].lower() == "message_reaction_add" and not "bot" in e["d"]["member"]["user"]:
-        emoji = ord(e["d"]["emoji"]["name"])
+        try:
+            emoji = ord(e["d"]["emoji"]["name"])
+        except TypeError:
+            emoji = e["d"]["emoji"]["name"]
+
         message = e["d"]["message_id"]
         channel = e["d"]["channel_id"]
         
@@ -18,7 +22,11 @@ def event(e):
                         a = True
                 else:
                     a = True
-                r = request("DELETE", "https://discord.com/api/channels/" + channel + "/messages/" + message + "/reactions" + "/" + quote(chr(emoji)) + "/" + e["d"]["user_id"], headers={"User-Agent": fcord.user_agent, "Authorization": "Bot " + fcord.token})
+                try:
+                    ename = chr(emoji)
+                except TypeError:
+                    ename = emoji
+                r = request("DELETE", "https://discord.com/api/channels/" + channel + "/messages/" + message + "/reactions" + "/" + quote(ename) + "/" + e["d"]["user_id"], headers={"User-Agent": fcord.user_agent, "Authorization": "Bot " + fcord.token})
                 if a:
                     b["callback"](e, b["arguments"])
 
