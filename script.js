@@ -74,7 +74,7 @@ function connect() {
 		server = null;
 	}
 	server = net.createServer(tcpserver);
-	server.listen(2020, () => {console.log("TCP server listening...");});
+	server.listen(2020, "127.0.0.1", () => {console.log("TCP server listening...");});
 	
 	websocket.on("connectFailed", function(error) {console.log("Connection error: " + error.toString()); server.close();});
 	websocket.on("connect", function(c) {
