@@ -54,10 +54,10 @@ def move(e, move_in, player, state, preview):
     move = None
     try:
         move = board.find_move(chess.parse_square(move_in[0]), chess.parse_square(move_in[1]), None)
-    except e:
+    except Exception as exce:
         invalid = True
         print("Exception on move generation!")
-        print(e)
+        print(exce)
     
     print("move:", move)
     print("input:", move_in)
